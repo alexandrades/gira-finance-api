@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id                 String          @id @default(uuid()) @db.VarChar(36)
+  usuario            String          @unique @db.VarChar(28)
+  senha              String          @db.VarChar(64)
+  nome               String          @db.VarChar(100)
+  email              String          @unique @db.VarChar(100)
+  telefone           String          @unique @db.VarChar(11)
+  saldo              Float
+  contato_emergencia String          @db.VarChar(11)
+  data_nascimento    DateTime        @db.Date
+  curso              String          @db.VarChar(50)
+  matricula          String          @db.VarChar(9)
+  ano_matricula      String          @db.VarChar(4)
+  ano_formado        String          @db.VarChar(4)
+  avatar_url         String
+  role               Role            @default(USER)
+  status             StatusUsuario   @default(ATIVO)
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @default(now())
+  responsavel        Compra[]
+  compras            UsuarioCompra[]
+  fechamentos        Fechamento[]
+  pagamentos         Pagamento[]
+
+  @@map("usuario")
+}
+
+model Compra {
+  id             String          @id @default(uuid()) @db.VarChar(36)
+  descricao      String          @db.VarChar(100)
+  valor          Float
+  status         StatusCompra    @default(PENDENTE)
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @default(now())
+  fechamento     Fechamento      @relation(fields: [fechamento_id], references: [id])
+  fechamento_id  String
+  compradores    UsuarioCompra[]
+  responsavel    Usuario?        @relation(fields: [responsavel_id], references: [id])
+  responsavel_id String?         @db.VarChar(36)
+
+  @@map("compra")
+}
+
+model UsuarioCompra {
+  usuario_id String
+  compra_id  String
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id])
+  compra  Compra  @relation(fields: [compra_id], references: [id])
+
+  @@id([usuario_id, compra_id])
+  @@map("usuario_compra")
+}
+
+model ContaVariavel {
+  id            String      @id @default(uuid()) @db.VarChar(36)
+  descricao     String      @unique @db.VarChar(100) 
+  valor         Float
+  status        StatusConta
+  fechamento    Fechamento  @relation(fields: [fechamento_id], references: [id])
+  fechamento_id String
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @default(now())
+
+  @@map("conta_variavel")
+}
+
+model Fechamento {
+  id             String           @id @default(uuid()) @db.VarChar(36)
+  mes            String           @db.VarChar(2)
+  ano            String           @db.VarChar(4)
+  status         StatusFechamento
+  responsavel    Usuario          @relation(fields: [responsavel_id], references: [id])
+  responsavel_id String
+  contas_variaveis ContaVariavel[]
+  compras        Compra[]
+
+  @@unique([mes, ano])
+  @@map("fechamento")
+}
+
+model Pagamento {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  descricao  String   @db.VarChar(100)
+  valor      Float
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  pagante    Usuario  @relation(fields: [pagante_id], references: [id])
+  pagante_id String
+
+  @@map("pagamento")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum StatusUsuario {
+  ATIVO
+  SUSPENSO
+}
+
+enum StatusCompra {
+  PENDENTE
+  APROVADA
+  REPROVADA
+}
+
+enum StatusConta {
+  PAGA
+  PENDENTE
+  VENCIDA
+}
+
+enum StatusFechamento {
+  PENDENTE
+  FECHADO
+  ABERTO
+}

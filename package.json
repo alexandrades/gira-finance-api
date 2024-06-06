@@ -1,0 +1,17 @@
+{
+  "name": "gira-finance-api",
+  "version": "1.0.0",
+  "description": "API for an bill manager aplication, developed to República Giramundo",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "author": "Alex de Andrade",
+  "license": "ISC",
+  "devDependencies": {
+    "prisma": "^5.15.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.15.0"
+  }
+}
